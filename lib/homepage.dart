@@ -18,14 +18,18 @@ String username = "username";
 String password = "password";
 
 class _homepageState extends State<homepage> {
-  Future<int?> postData() async {
+  Future<Response> postData(String username, String password) async {
     var response =
-        await Dio().post('https://js-post-api.herokuapp.com/api/login', data: {
-      "username": "thanhdeptrai",
-      "password": "123456",
-    });
+        await Dio().post('https://js-post-api.herokuapp.com/api/login',
+            data: {
+              "username": username,
+              "password": password,
+            },
+            options: Options(
+              validateStatus: (status) => status! < 500,
+            ));
 
-    return response.statusCode;
+    return response;
   }
 
   @override
@@ -152,21 +156,23 @@ class _homepageState extends State<homepage> {
                     ),
                   ),
                   onPressed: () async {
-                    final statusC = await postData();
-                    final username = "thanhdeptrai";
-                    final password = "123456";
+                    final username = usernameController.text;
+                    final password = passwordController.text;
+                    final result = await postData(username, password);
+
+                    final statusC = result.statusCode;
+
                     print(statusC);
 
-                    if (username == usernameController.text &&
-                        password == passwordController.text &&
-                        statusC == 200) {
+                    if (statusC == 200) {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => const loginpage()));
                       setState(() {});
                     } else {
-                      print("Username or password wrong");
+                      print('Status code: ${result.statusCode}');
+                      print(result.data['error']);
                       setState(() {});
                     }
                   },
